@@ -1,0 +1,38 @@
+{
+  "flashbackbezier.popup.section": "ベジェイージング",
+  "flashbackbezier.popup.current": "現在のイージング: %s",
+  "flashbackbezier.popup.current_none": "なし（従来のFlashback補間）",
+  "flashbackbezier.popup.current_mixed": "混在",
+  "flashbackbezier.popup.open": "ベジェを編集…",
+  "flashbackbezier.popup.clear": "イージングを削除",
+
+  "flashbackbezier.preset.linear": "Linear",
+  "flashbackbezier.preset.ease": "Ease",
+  "flashbackbezier.preset.ease_in": "Ease In",
+  "flashbackbezier.preset.ease_out": "Ease Out",
+  "flashbackbezier.preset.ease_in_out": "Ease In Out",
+  "flashbackbezier.preset.cubic": "Cubic",
+  "flashbackbezier.preset.sine": "Sine",
+  "flashbackbezier.preset.expo": "Expo",
+  "flashbackbezier.preset.back": "Back",
+  "flashbackbezier.preset.custom": "Custom Bezier",
+
+  "flashbackbezier.editor.title": "ベジェイージング###FlashbackBezierEditor",
+  "flashbackbezier.editor.preset": "プリセット",
+  "flashbackbezier.editor.graph_tooltip": "2つのハンドルをドラッグしてイージングを調整します。",
+  "flashbackbezier.editor.handle1": "開始ハンドル (P1)",
+  "flashbackbezier.editor.handle2": "終了ハンドル (P2)",
+  "flashbackbezier.editor.targets": "編集中: %s 個のキーフレーム",
+  "flashbackbezier.editor.history": "ベジェイージングを変更",
+  "flashbackbezier.editor.targets_invalid": "編集中のキーフレームは無効になりました",
+  "flashbackbezier.editor.applies_to": "このキーフレームから次のキーフレームまでの区間に適用されます。",
+  "flashbackbezier.editor.applies_to_multi": "選択中の各キーフレームの次区間に適用されます。",
+  "flashbackbezier.editor.reset": "リセット",
+  "flashbackbezier.editor.apply": "適用",
+  "flashbackbezier.editor.cancel": "キャンセル",
+  "flashbackbezier.editor.value_x": "%s X",
+  "flashbackbezier.editor.value_y": "%s Y",
+
+  "flashbackbezier.missing_flashback": "Flashback Bezier EasingにはFlashback Mod（MC 26.3対応版）の導入が必要です！",
+  "flashbackbezier.info.cleared": "ベジェイージングを削除しました"
+}

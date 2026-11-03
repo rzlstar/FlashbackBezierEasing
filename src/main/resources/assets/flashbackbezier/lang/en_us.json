@@ -1,0 +1,38 @@
+{
+  "flashbackbezier.popup.section": "Bezier Easing",
+  "flashbackbezier.popup.current": "Current easing: %s",
+  "flashbackbezier.popup.current_none": "None (vanilla Flashback interpolation)",
+  "flashbackbezier.popup.current_mixed": "Mixed",
+  "flashbackbezier.popup.open": "Edit Bezier…",
+  "flashbackbezier.popup.clear": "Clear Easing",
+
+  "flashbackbezier.preset.linear": "Linear",
+  "flashbackbezier.preset.ease": "Ease",
+  "flashbackbezier.preset.ease_in": "Ease In",
+  "flashbackbezier.preset.ease_out": "Ease Out",
+  "flashbackbezier.preset.ease_in_out": "Ease In Out",
+  "flashbackbezier.preset.cubic": "Cubic",
+  "flashbackbezier.preset.sine": "Sine",
+  "flashbackbezier.preset.expo": "Expo",
+  "flashbackbezier.preset.back": "Back",
+  "flashbackbezier.preset.custom": "Custom Bezier",
+
+  "flashbackbezier.editor.title": "Bezier Easing###FlashbackBezierEditor",
+  "flashbackbezier.editor.preset": "Preset",
+  "flashbackbezier.editor.graph_tooltip": "Drag the two handles to shape the easing curve.",
+  "flashbackbezier.editor.handle1": "In handle (P1)",
+  "flashbackbezier.editor.handle2": "Out handle (P2)",
+  "flashbackbezier.editor.targets": "Editing %s keyframe(s)",
+  "flashbackbezier.editor.history": "Change bezier easing",
+  "flashbackbezier.editor.targets_invalid": "Edited keyframes are no longer valid",
+  "flashbackbezier.editor.applies_to": "Easing applies to the segment that starts at this keyframe.",
+  "flashbackbezier.editor.applies_to_multi": "Easing applies to outgoing segments of every selected keyframe.",
+  "flashbackbezier.editor.reset": "Reset",
+  "flashbackbezier.editor.apply": "Apply",
+  "flashbackbezier.editor.cancel": "Cancel",
+  "flashbackbezier.editor.value_x": "%s X",
+  "flashbackbezier.editor.value_y": "%s Y",
+
+  "flashbackbezier.missing_flashback": "Flashback Bezier Easing requires the Flashback mod (MC 26.3 compatible version) to be installed!",
+  "flashbackbezier.info.cleared": "Bezier easing removed"
+}

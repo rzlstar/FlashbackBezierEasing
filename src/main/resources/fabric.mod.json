@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "flashbackbezier",
+  "version": "${version}",
+  "name": "Flashback Bezier Easing",
+  "description": "Adds cubic-bezier easing to Flashback's camera keyframes, with an After Effects style graph editor. A standalone add-on for Flashback.",
+  "authors": [
+    "Lasutar"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "dev.lasutar.flashbackbezier.FlashbackBezierMod"
+    ]
+  },
+  "mixins": [
+    "flashbackbezier.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.10",
+    "fabric-api": "*",
+    "minecraft": "26.3",
+    "flashback": "*"
+  }
+}

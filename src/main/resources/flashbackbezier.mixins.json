@@ -1,0 +1,20 @@
+{
+  "required": true,
+  "package": "dev.lasutar.flashbackbezier.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "client": [
+    "KeyframeMixin",
+    "KeyframeTypeAdapterMixin",
+    "CameraKeyframeMixin",
+    "CameraOrbitKeyframeMixin",
+    "TrackEntityKeyframeMixin",
+    "FOVKeyframeMixin",
+    "KeyframeTrackMixin",
+    "TimelineWindowMixin",
+    "ReplayUIMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
