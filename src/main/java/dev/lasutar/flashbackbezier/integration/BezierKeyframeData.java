@@ -1,6 +1,7 @@
 package dev.lasutar.flashbackbezier.integration;
 
 import dev.lasutar.flashbackbezier.bezier.BezierEasing;
+import dev.lasutar.flashbackbezier.bezier.BezierRange;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -20,6 +21,17 @@ public interface BezierKeyframeData {
 
     void flashbackbezier$setEasing(@Nullable BezierEasing easing);
 
+    /**
+     * The range easing starting at this keyframe (one easing across this
+     * keyframe -> {@link BezierRange#endTick}), or null when the keyframe has
+     * no range. While active it takes precedence over per-segment easings of
+     * all keyframes inside the span.
+     */
+    @Nullable
+    BezierRange flashbackbezier$getRange();
+
+    void flashbackbezier$setRange(@Nullable BezierRange range);
+
     static @Nullable BezierEasing get(Object keyframe) {
         if (keyframe instanceof BezierKeyframeData data) {
             return data.flashbackbezier$getEasing();
@@ -30,6 +42,19 @@ public interface BezierKeyframeData {
     static void set(Object keyframe, @Nullable BezierEasing easing) {
         if (keyframe instanceof BezierKeyframeData data) {
             data.flashbackbezier$setEasing(easing);
+        }
+    }
+
+    static @Nullable BezierRange getRange(Object keyframe) {
+        if (keyframe instanceof BezierKeyframeData data) {
+            return data.flashbackbezier$getRange();
+        }
+        return null;
+    }
+
+    static void setRange(Object keyframe, @Nullable BezierRange range) {
+        if (keyframe instanceof BezierKeyframeData data) {
+            data.flashbackbezier$setRange(range);
         }
     }
 }

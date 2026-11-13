@@ -35,6 +35,70 @@ dependencies {
     // MixinExtras sugar (@WrapOperation / @Local). Fabric Loader ships MixinExtras at runtime.
     compileOnly "io.github.llamalad7:mixinextras-fabric:${project.mixinextras_version}"
     annotationProcessor "io.github.llamalad7:mixinextras-fabric:${project.mixinextras_version}"
+
+    // Unit tests: pure-Java logic (bezier math, JSON, preset store, range warp)
+    // must NOT depend on Flashback classes, so test sources only get JUnit + Gson.
+    testImplementation platform("org.junit:junit-bom:${project.junit_version}")
+    testImplementation "org.junit.jupiter:junit-jupiter"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+    testImplementation "com.google.code.gson:gson:${project.gson_version}"
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "failed", "skipped"
+        showStackTraces = true
+    }
+}
+
+// Workaround for Windows + non-ASCII project paths:
+// the JDK launcher decodes "@argfile" bytes with the system ANSI code page
+// (CP932 on Japanese Windows), while Gradle always writes the test worker's
+// classpath argfile in UTF-8 (and always uses an argfile, regardless of
+// length). Japanese paths inside the argfile become mojibake and every test
+// class fails to load (ClassNotFoundException).
+//
+// Fix: keep the argfile ASCII-only by putting the real test runtime
+// classpath inside a "pathing jar" whose manifest Class-Path attribute the
+// JVM reads as UTF-8. Non-ASCII paths then load correctly.
+//
+// The jar is built with plain java.util.jar (NOT the Jar task): Gradle's
+// manifest writer URL-decodes Class-Path entries and encodes them with the
+// platform charset, which would reintroduce exactly the mojibake we are
+// avoiding. java.util.jar.Manifest.write() emits UTF-8, and
+// URI.toASCIIString() percent-escapes non-ASCII, keeping the manifest pure
+// ASCII.
+//
+// The jar itself is written to an ASCII-only path (user temp dir, falling
+// back to C:\Users\Public) because its own path also ends up inside the
+// worker's argfile and must survive the CP932 argfile decoding.
+def tempDirForPathingJar = new File(System.getProperty("java.io.tmpdir"))
+def pathingJarBase = tempDirForPathingJar.absolutePath.chars().allMatch { it < 128 }
+    ? tempDirForPathingJar
+    : new File("C:/Users/Public")
+def testPathingJarFile = new File(pathingJarBase, "flashbackbezier-test-classpath.jar")
+
+def testPathingJar = tasks.register("testPathingJar") {
+    inputs.files(sourceSets.test.runtimeClasspath)
+    outputs.file(testPathingJarFile)
+    doLast {
+        def manifest = new java.util.jar.Manifest()
+        manifest.getMainAttributes().putValue("Manifest-Version", "1.0")
+        manifest.getMainAttributes().putValue("Class-Path",
+            sourceSets.test.runtimeClasspath.files
+                .collect { it.toURI().toASCIIString() }
+                .join(" "))
+        testPathingJarFile.getParentFile().mkdirs()
+        new java.io.FileOutputStream(testPathingJarFile).withCloseable { fos ->
+            def jos = new java.util.jar.JarOutputStream(fos, manifest)
+            jos.close()
+        }
+    }
+}
+
+tasks.matching { it.name == "test" }.configureEach {
+    classpath = files(testPathingJar)
 }
 
 processResources {
@@ -62,3 +126,4 @@ jar {
         rename { "${it}_${project.base.archivesName.get()}" }
     }
 }
+

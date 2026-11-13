@@ -1,6 +1,7 @@
 package dev.lasutar.flashbackbezier.integration;
 
 import dev.lasutar.flashbackbezier.bezier.BezierEasing;
+import dev.lasutar.flashbackbezier.bezier.BezierRange;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -30,7 +31,7 @@ public final class BezierHooks {
      * the argument order irrelevant.</p>
      */
     public static @Nullable BezierEasing resolveSegmentEasing(@Nullable Map.Entry<Integer, com.moulberry.flashback.keyframe.Keyframe> captured0,
-                                                              @Nullable Map.Entry<Integer, com.moulberry.flashback.keyframe.Keyframe> captured1) {
+                                                               @Nullable Map.Entry<Integer, com.moulberry.flashback.keyframe.Keyframe> captured1) {
         if (captured0 == null || captured1 == null) {
             return null;
         }
@@ -48,9 +49,9 @@ public final class BezierHooks {
      * outgoing segment is being eased.
      */
     public static @Nullable BezierEasing resolveSmoothSegmentEasing(@Nullable Map.Entry<Integer, com.moulberry.flashback.keyframe.Keyframe> e0,
-                                                                    @Nullable Map.Entry<Integer, com.moulberry.flashback.keyframe.Keyframe> e1,
-                                                                    @Nullable Map.Entry<Integer, com.moulberry.flashback.keyframe.Keyframe> e2,
-                                                                    @Nullable Map.Entry<Integer, com.moulberry.flashback.keyframe.Keyframe> e3) {
+                                                                     @Nullable Map.Entry<Integer, com.moulberry.flashback.keyframe.Keyframe> e1,
+                                                                     @Nullable Map.Entry<Integer, com.moulberry.flashback.keyframe.Keyframe> e2,
+                                                                     @Nullable Map.Entry<Integer, com.moulberry.flashback.keyframe.Keyframe> e3) {
         if (e0 == null || e1 == null || e2 == null || e3 == null) {
             return null;
         }
@@ -95,7 +96,7 @@ public final class BezierHooks {
      * and bezier(1)=1 guarantee C0 continuity with neighbouring segments).
      */
     public static float easeSegmentPosition(@Nullable BezierEasing easing, float lowerPosition,
-                                            float ceilPosition, float current) {
+                                             float ceilPosition, float current) {
         double span = (double) ceilPosition - (double) lowerPosition;
         if (Math.abs(span) < 1e-9) {
             return current;
@@ -106,7 +107,10 @@ public final class BezierHooks {
     }
 
     /**
-     * Used by the editor window to write easings to live keyframes.
+     * Copies BOTH attachments (per-segment easing and range easing) from one
+     * keyframe to another. Used by the keyframe {@code copy()} mixins so
+     * clipboard copies, undo snapshots and SetKeyframe history entries carry
+     * the full easing state.
      */
     public static void transferBetween(com.moulberry.flashback.keyframe.Keyframe from, com.moulberry.flashback.keyframe.Keyframe to) {
         BezierEasing easing = BezierKeyframeData.get(from);
@@ -114,6 +118,12 @@ public final class BezierHooks {
             BezierKeyframeData.set(to, null);
         } else {
             BezierKeyframeData.set(to, new BezierEasing(easing));
+        }
+        BezierRange range = BezierKeyframeData.getRange(from);
+        if (range == null) {
+            BezierKeyframeData.setRange(to, null);
+        } else {
+            BezierKeyframeData.setRange(to, new BezierRange(range));
         }
     }
 

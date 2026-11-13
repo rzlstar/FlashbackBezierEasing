@@ -12,13 +12,16 @@ import com.moulberry.flashback.state.EditorState;
 import com.moulberry.flashback.state.KeyframeTrack;
 import dev.lasutar.flashbackbezier.bezier.BezierEasing;
 import dev.lasutar.flashbackbezier.bezier.BezierPreset;
+import dev.lasutar.flashbackbezier.bezier.BezierRange;
 import dev.lasutar.flashbackbezier.integration.BezierKeyframeData;
 import imgui.moulberry90.ImGui;
 import net.minecraft.client.resources.language.I18n;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The "Bezier Easing" section drawn at the top of Flashback's keyframe
@@ -154,6 +157,150 @@ public final class BezierPopupUi {
         if (ImGui.button(clearLabel, buttonWidth, ReplayUI.scaleUi(18))) {
             clearEasing(editorState, editorScene, targets);
         }
+
+        // ---- range easing section ----
+        renderRangeSection(editorState, editorScene, targets, editingTrackIndex, editingKeyframeTick,
+            selectedKeyframesList, multi);
+    }
+
+    /**
+     * The "Range Easing" section: one easing curve applied across a whole span
+     * of keyframes. Creating a range gives EVERY target keyframe its own range
+     * (each spanning to its own end tick) sharing one draft easing, so a
+     * multi-selection applies the same pacing to a batch of segments.
+     */
+    private static void renderRangeSection(EditorState editorState, EditorScene editorScene,
+                                           List<BezierTarget> targets, int editingTrackIndex, int editingKeyframeTick,
+                                           List<SelectedKeyframes> selectedKeyframesList, boolean multi) {
+        Keyframe editingKeyframe = resolve(editorScene, new BezierTarget(editingTrackIndex, editingKeyframeTick));
+        if (editingKeyframe == null) {
+            return;
+        }
+        BezierRange existing = BezierKeyframeData.getRange(editingKeyframe);
+
+        ImGuiHelper.separatorWithText(I18n.get("flashbackbezier.popup.range_section"));
+        if (existing != null) {
+            ImGui.text(I18n.get("flashbackbezier.popup.range_info", existing.endTick,
+                BezierPreset.byId(existing.easing.preset).text()));
+
+            String editLabel = I18n.get("flashbackbezier.popup.range_edit");
+            String removeLabel = I18n.get("flashbackbezier.popup.range_remove");
+            float buttonWidth = Math.max(
+                ImGuiHelper.calcTextWidth(editLabel),
+                ImGuiHelper.calcTextWidth(removeLabel)
+            ) + ReplayUI.scaleUi(16);
+
+            if (ImGui.button(editLabel, buttonWidth, ReplayUI.scaleUi(18))) {
+                BezierEditorWindow.openRange(targets, collectExistingEndTicks(editorScene, targets), multi);
+            }
+            ImGui.sameLine();
+            if (ImGui.button(removeLabel, buttonWidth, ReplayUI.scaleUi(18))) {
+                clearRange(editorState, editorScene, targets);
+            }
+        } else {
+            Map<BezierTarget, Integer> endTicks = collectNewEndTicks(editorScene, targets, selectedKeyframesList);
+            if (endTicks.isEmpty()) {
+                ImGui.text(I18n.get("flashbackbezier.popup.range_unavailable"));
+                return;
+            }
+            if (ImGui.button(I18n.get("flashbackbezier.popup.range_create"), ReplayUI.scaleUi(120), ReplayUI.scaleUi(18))) {
+                BezierEditorWindow.openRange(targets, endTicks, multi);
+            }
+        }
+    }
+
+    /** End ticks for EXISTING ranges on the targets (used by "Edit Range"). */
+    private static Map<BezierTarget, Integer> collectExistingEndTicks(EditorScene editorScene, List<BezierTarget> targets) {
+        Map<BezierTarget, Integer> endTicks = new HashMap<>();
+        for (BezierTarget target : targets) {
+            Keyframe keyframe = resolve(editorScene, target);
+            if (keyframe == null) {
+                continue;
+            }
+            BezierRange range = BezierKeyframeData.getRange(keyframe);
+            if (range != null) {
+                endTicks.put(target, range.endTick);
+            } else {
+                // No range yet: cover the segment to the next keyframe
+                endTicks.put(target, nextKeyframeTick(editorScene, target.trackIndex(), target.tick()));
+            }
+        }
+        return endTicks;
+    }
+
+    /**
+     * End ticks for NEW ranges: the last selected tick on the same track when
+     * the selection covers it, otherwise the track's next keyframe tick.
+     * Targets without a valid end tick are skipped.
+     */
+    private static Map<BezierTarget, Integer> collectNewEndTicks(EditorScene editorScene, List<BezierTarget> targets,
+                                                                 List<SelectedKeyframes> selectedKeyframesList) {
+        Map<BezierTarget, Integer> endTicks = new HashMap<>();
+        for (BezierTarget target : targets) {
+            int endTick = lastSelectedTickAfter(selectedKeyframesList, target.trackIndex(), target.tick());
+            if (endTick < 0) {
+                endTick = nextKeyframeTick(editorScene, target.trackIndex(), target.tick());
+            }
+            if (endTick > target.tick()) {
+                endTicks.put(target, endTick);
+            }
+        }
+        return endTicks;
+    }
+
+    private static int lastSelectedTickAfter(List<SelectedKeyframes> selectedKeyframesList, int trackIndex, int startTick) {
+        int best = -1;
+        for (SelectedKeyframes selected : selectedKeyframesList) {
+            if (selected.trackIndex() != trackIndex) {
+                continue;
+            }
+            for (int tick : selected.keyframeTicks()) {
+                if (tick > startTick && (best < 0 || tick < best)) {
+                    best = tick;
+                }
+            }
+        }
+        return best;
+    }
+
+    private static int nextKeyframeTick(EditorScene editorScene, int trackIndex, int startTick) {
+        if (trackIndex < 0 || trackIndex >= editorScene.keyframeTracks.size()) {
+            return -1;
+        }
+        Map.Entry<Integer, com.moulberry.flashback.keyframe.Keyframe> next =
+            editorScene.keyframeTracks.get(trackIndex).keyframesByTick.higherEntry(startTick);
+        return next == null ? -1 : next.getKey();
+    }
+
+    /**
+     * Removes the range easing from all targets and records it in the editor
+     * undo history. Per-keyframe easings (if any) stay untouched.
+     */
+    public static void clearRange(EditorState editorState, EditorScene editorScene,
+                                  List<BezierTarget> targets) {
+        List<EditorSceneHistoryAction> undo = new ArrayList<>();
+        List<EditorSceneHistoryAction> redo = new ArrayList<>();
+
+        for (BezierTarget target : targets) {
+            Keyframe keyframe = resolve(editorScene, target);
+            if (keyframe == null || BezierKeyframeData.getRange(keyframe) == null) {
+                continue;
+            }
+            KeyframeTrack track = editorScene.keyframeTracks.get(target.trackIndex());
+            KeyframeType<?> type = track.keyframeType;
+            undo.add(new EditorSceneHistoryAction.SetKeyframe(type, target.trackIndex(), target.tick(),
+                keyframe.copy()));
+
+            BezierKeyframeData.setRange(keyframe, null);
+            redo.add(new EditorSceneHistoryAction.SetKeyframe(type, target.trackIndex(), target.tick(),
+                keyframe.copy()));
+        }
+
+        if (undo.isEmpty()) {
+            return;
+        }
+        editorScene.push(new EditorSceneHistoryEntry(undo, redo, I18n.get("flashbackbezier.info.range_cleared")));
+        editorState.markDirty();
     }
 
     /**
